@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <!-- Prevent zooming + allow edge-to-edge safe-area -->
+  <!-- Prevent zooming + allow edge-to-edge on notched devices -->
   <meta name="viewport"
         content="width=device-width,
                  initial-scale=1,
@@ -11,13 +11,12 @@
                  viewport-fit=cover">
   <title>Cycle Calculator</title>
 
-  <!-- Safe-area padding for notch/home-indicator -->
+  <!-- Safe-area padding -->
   <style>
     html, body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
-      margin: 0;
-      height: 100%;
+      margin: 0; height: 100%;
     }
   </style>
 
@@ -40,7 +39,7 @@
   </style>
 </head>
 <body class="bg-gray-800 flex items-center justify-center h-screen">
-  <div class="bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-md">
+  <div class="bg-gray-900 p-6 w-full h-full sm:rounded-2xl sm:shadow-lg sm:max-w-md">
     <h1 class="text-3xl font-semibold text-center mb-2 text-gray-100">Cycle Calculator</h1>
     <p class="text-center text-gray-400 mb-6 text-sm">
       Calculate your optimal bedtime or wake-up time based on sleep cycles.
@@ -54,29 +53,15 @@
 
     <!-- time picker -->
     <div class="flex items-center justify-center space-x-3 mb-6">
-      <!-- hour -->
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="hourInput"
-               type="tel"
-               inputmode="numeric"
-               pattern="[0-9]*"
-               maxlength="2"
-               value="10"
+        <input id="hourInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
-      <!-- colon -->
       <div class="h-16 flex items-center justify-center text-3xl sm:text-4xl text-gray-400">:</div>
-      <!-- minute -->
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="minuteInput"
-               type="tel"
-               inputmode="numeric"
-               pattern="[0-9]*"
-               maxlength="2"
-               value="00"
+        <input id="minuteInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="00"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
-      <!-- AM/PM -->
       <div class="flex flex-col border border-gray-600 rounded-lg overflow-hidden">
         <button id="amBtn" class="px-2 sm:px-3 py-1">AM</button>
         <button id="pmBtn" class="px-2 sm:px-3 py-1">PM</button>
