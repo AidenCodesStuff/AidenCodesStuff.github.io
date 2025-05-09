@@ -2,28 +2,19 @@
 <html lang="en" class="bg-gray-800">
 <head>
   <meta charset="utf-8">
-  <!-- lock zoom + edge-to-edge safe‐area -->
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>Cycle Calculator</title>
-
   <style>
-    /* html now has the dark background behind the notch/status bar */
-    html { background-color: #1f2937; }
-
-    /* hide number‐input spinners */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0 }
-    input[type=number] { -moz-appearance: textfield }
-
-    /* safe‐area helper */
-    .safe {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
+    html { background: #1f2937 }
+    html, body {
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+      margin: 0; height: 100%; overflow: hidden;
     }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin:0 }
+    input[type=number] { -moz-appearance: textfield }
   </style>
-
-  <!-- PWA & icons -->
   <link rel="manifest" href="/manifest.json">
   <link rel="shortcut icon" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon-192.png">
@@ -31,45 +22,32 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Cycle Calculator">
-
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-transparent flex items-center justify-center h-screen overflow-hidden">
 
-  <!--
-    .safe provides the top & bottom notch padding,
-    h-full+justify-center vertically centers on mobile,
-    sm:justify-start restores top‐aligned on larger
-  -->
   <div class="safe bg-gray-900 p-6 w-full h-full sm:h-auto sm:max-w-md sm:rounded-2xl sm:shadow-lg
-              flex flex-col justify-center sm:justify-start">
-
-    <h1 class="text-3xl font-semibold text-gray-100 text-center mb-2">
-      Cycle Calculator
-    </h1>
+              flex flex-col justify-center items-center">
+    <h1 class="text-3xl font-semibold text-gray-100 text-center mb-2">Cycle Calculator</h1>
     <p class="text-gray-400 text-sm text-center mb-6">
       Calculate your optimal bedtime or wake-up time based on sleep cycles.
     </p>
 
-    <!-- Mode toggle -->
-    <div class="flex mb-6 space-x-2">
-      <button id="sleepBtn" class="flex-1 py-2 rounded bg-gray-700 text-gray-300">
-        Bedtime
-      </button>
-      <button id="wakeBtn"  class="flex-1 py-2 rounded bg-indigo-600 text-white">
-        Wake-up time
-      </button>
+    <!-- mode -->
+    <div class="flex mb-6 space-x-2 w-full">
+      <button id="sleepBtn" class="flex-1 py-2 rounded bg-gray-700 text-gray-300">Bedtime</button>
+      <button id="wakeBtn"  class="flex-1 py-2 rounded bg-indigo-600 text-white">Wake-up time</button>
     </div>
 
-    <!-- Time picker -->
+    <!-- time picker -->
     <div class="flex items-center justify-center space-x-3 mb-6">
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="hourInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10"
+        <input id="hourInput" type="tel" inputmode="numeric" maxlength="2" value="10"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <div class="h-16 flex items-center justify-center text-3xl sm:text-4xl text-gray-400">:</div>
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="minuteInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="00"
+        <input id="minuteInput" type="tel" inputmode="numeric" maxlength="2" value="00"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <div class="flex flex-col border border-gray-600 rounded-lg overflow-hidden">
@@ -78,7 +56,7 @@
       </div>
     </div>
 
-    <!-- Cycles slider -->
+    <!-- cycles -->
     <label class="text-gray-300 text-sm mb-1">
       Cycles: <span id="cycleLabel" class="text-gray-100">5</span>
     </label>
@@ -86,17 +64,20 @@
            class="w-full h-2 bg-indigo-600 rounded-lg appearance-none cursor-pointer mb-2"/>
     <div class="text-gray-400 italic text-xs mb-6">Recommended: 4–6</div>
 
-    <!-- Calculate button -->
+    <!-- calculate & alarm -->
     <button id="calculateBtn"
-            class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg mb-4">
+            class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg mb-2">
       Calculate
     </button>
+    <button id="createAlarmBtn"
+            class="w-full py-2 bg-gray-700 text-white font-semibold rounded-lg mb-4 hidden">
+      Create Alarm
+    </button>
 
-    <!-- Results -->
+    <!-- results -->
     <ul id="results" class="flex-1 overflow-auto space-y-3 text-gray-100 text-sm"></ul>
   </div>
 
-  <!-- Version -->
   <div class="fixed bottom-2 left-2 text-xs text-gray-400">v1.0.0</div>
 
   <!-- A2HS banner -->
@@ -110,56 +91,54 @@
   </div>
 
   <script>
-    // prevent scrolling/bounce
+    // disable scroll/bounce
     document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-
-    // service worker
+    // SW
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-
-    // A2HS prompt
+    // A2HS
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      a2hsBanner.classList.remove('hidden');
+      e.preventDefault(); deferredPrompt = e;
+      document.getElementById('a2hsBanner').classList.remove('hidden');
     });
     a2hsBtn.onclick   = async () => { a2hsBanner.classList.add('hidden'); deferredPrompt.prompt(); await deferredPrompt.userChoice; };
     a2hsClose.onclick = () => a2hsBanner.classList.add('hidden');
 
     // UI refs
-    const sleepBtn     = document.getElementById('sleepBtn'),
-          wakeBtn      = document.getElementById('wakeBtn'),
-          hourInput    = document.getElementById('hourInput'),
-          minuteInput  = document.getElementById('minuteInput'),
-          amBtn        = document.getElementById('amBtn'),
-          pmBtn        = document.getElementById('pmBtn'),
-          cycleRange   = document.getElementById('cycleRange'),
-          cycleLabel   = document.getElementById('cycleLabel'),
-          calculateBtn = document.getElementById('calculateBtn'),
-          results      = document.getElementById('results');
+    const sleepBtn       = document.getElementById('sleepBtn'),
+          wakeBtn        = document.getElementById('wakeBtn'),
+          hourInput      = document.getElementById('hourInput'),
+          minuteInput    = document.getElementById('minuteInput'),
+          amBtn          = document.getElementById('amBtn'),
+          pmBtn          = document.getElementById('pmBtn'),
+          cycleRange     = document.getElementById('cycleRange'),
+          cycleLabel     = document.getElementById('cycleLabel'),
+          calculateBtn   = document.getElementById('calculateBtn'),
+          createAlarmBtn = document.getElementById('createAlarmBtn'),
+          results        = document.getElementById('results');
 
-    let mode = 'wake', period = 'AM';
+    let mode='wake', period='AM';
     const ACTIVE   = ['bg-indigo-600','text-white'],
           INACTIVE = ['bg-gray-700','text-gray-300'];
 
-    function toggle(on, off) {
+    function toggle(on,off){
       on .classList.remove(...INACTIVE); on .classList.add(...ACTIVE);
       off.classList.remove(...ACTIVE);   off.classList.add(...INACTIVE);
     }
 
-    sleepBtn.onclick = () => { mode = 'sleep'; toggle(sleepBtn, wakeBtn); };
-    wakeBtn.onclick  = () => { mode = 'wake';  toggle(wakeBtn, sleepBtn); };
+    sleepBtn.onclick = () => { mode='sleep'; toggle(sleepBtn,wakeBtn); };
+    wakeBtn.onclick  = () => { mode='wake';  toggle(wakeBtn,sleepBtn); };
 
-    amBtn.onclick = () => { period = 'AM'; toggle(amBtn, pmBtn); };
-    pmBtn.onclick = () => { period = 'PM'; toggle(pmBtn, amBtn); };
+    amBtn.onclick = () => { period='AM'; toggle(amBtn,pmBtn); };
+    pmBtn.onclick = () => { period='PM'; toggle(pmBtn,amBtn); };
 
     [hourInput, minuteInput].forEach(el => {
       el.onfocus = () => el.select();
       el.oninput = () => {
-        let max = el === hourInput ? 12 : 59;
-        let v = Math.min(max, Math.max(el === hourInput ? 1 : 0, +el.value || 0));
-        el.value = el === minuteInput ? String(v).padStart(2, '0') : v;
-        if (el === hourInput && el.value.length > 1) minuteInput.focus();
+        let max = el===hourInput?12:59;
+        let v = Math.min(max, Math.max(el===hourInput?1:0, +el.value||0));
+        el.value = el===minuteInput?String(v).padStart(2,'0'):v;
+        if(el===hourInput && el.value.length>1) minuteInput.focus();
       };
     });
 
@@ -168,24 +147,54 @@
     calculateBtn.onclick = () => {
       const h12  = +hourInput.value,
             m    = +minuteInput.value,
-            h24  = (h12 % 12) + (period === 'PM' ? 12 : 0),
+            h24  = (h12%12)+(period==='PM'?12:0),
             base = new Date(1970,0,1,h24,m).getTime(),
             n    = +cycleRange.value,
-            MIN  = 90*60000, MAX = 120*60000,
-            sign = mode === 'sleep' ? 1 : -1;
+            MIN  =90*60000, MAX=120*60000,
+            sign = mode==='sleep'?1:-1;
 
-      const fmt  = ms => new Date(ms).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
-            minT = fmt(base + sign*n*MIN),
-            optT = fmt((base + sign*n*MIN + base + sign*n*MAX) / 2),
-            lbl  = mode === 'sleep' ? 'Wake-up time' : 'Bedtime';
+      const fmt  = ms=>new Date(ms).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),
+            minT = fmt(base+sign*n*MIN),
+            optT = fmt((base+sign*n*MIN+base+sign*n*MAX)/2),
+            lbl  = mode==='sleep'?'Wake-up time':'Bedtime';
 
-      results.innerHTML = `
+      results.innerHTML=`
         <li class="bg-indigo-700 p-3 rounded text-center">
           ${lbl}: <strong>${minT}</strong>
         </li>
         <li class="text-gray-400 text-center px-2">
           Optimal ${lbl.toLowerCase()}: <strong>${optT}</strong>
         </li>`;
+
+      // show & wire alarm button
+      createAlarmBtn.classList.remove('hidden');
+      createAlarmBtn.onclick=()=>{
+        const [time,mer] = minT.split(' '),
+              [hh,mm]   = time.split(':').map(Number);
+        let H=mer==='PM'&&hh<12?hh+12:mer==='AM'&&hh===12?0:hh;
+        const now=new Date(),
+              alarm=new Date(now.getFullYear(),now.getMonth(),now.getDate(),H,mm,0);
+        const pad=n=>String(n).padStart(2,'0'),
+              utc=dt=>dt.getUTCFullYear()
+                     +pad(dt.getUTCMonth()+1)
+                     +pad(dt.getUTCDate())
+                     +'T'+pad(dt.getUTCHours())
+                     +pad(dt.getUTCMinutes())
+                     +pad(dt.getUTCSeconds())
+                     +'Z';
+        const ics=[ 
+          'BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
+          `DTSTART:${utc(alarm)}`,`SUMMARY:${lbl} Alarm`,
+          'BEGIN:VALARM','TRIGGER:-PT0M','ACTION:DISPLAY',
+          `DESCRIPTION:Time for ${lbl.toLowerCase()}`,
+          'END:VALARM','END:VEVENT','END:VCALENDAR'
+        ].join('\r\n');
+        const blob=new Blob([ics],{type:'text/calendar'}),
+              url=URL.createObjectURL(blob),
+              a=document.createElement('a');
+        a.href=url; a.download='alarm.ics'; a.click();
+        URL.revokeObjectURL(url);
+      };
     };
   </script>
 </body>
