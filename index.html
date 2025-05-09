@@ -1,23 +1,64 @@
 <!DOCTYPE html>
-<html><head><meta charset=utf-8><title>SleepCalc</title></head><body>
-<h1>SleepCalc</h1>
-<label><input type=radio name=m value=s checked>Sleep at <input type=time id=sl></label><br>
-<label><input type=radio name=m value=w>Wake at <input type=time id=wk disabled></label><br>
-<label>Cycles <input type=range id=cy min=1 max=10 value=5 oninput="nc.textContent=this.value"></label>
-<span id=nc>5</span><br>
-<button onclick="
- m=document.querySelector('[name=m]:checked').value;
- f=15*60e3; C=90*60e3;
- t=Date.parse('1970-01-01T'+(m=='s'?sl.value:wk.value))+(m=='s'?f:0);
- o.innerHTML='';
- for(i=1;i<=cy.value;i++){
-   d=new Date(t+(m=='s'?i*C:-i*C-f));
-   o.innerHTML+='<li>'+ (m=='s'?'Wake at ':'Sleep at ')+d.toTimeString().slice(0,5)+' (cycle '+i+')</li>';
- }
-">Calc</button>
-<ul id=o></ul>
-<script>
-for(r of document.getElementsByName('m'))
-  r.onchange=_=>{ sl.disabled=r.value!='s'; wk.disabled=r.value!='w' };
-</script>
-</body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SleepCalc</title>
+</head>
+<body>
+  <h1>SleepCalc</h1>
+
+  <label>
+    <input type="radio" name="mode" value="sleep" checked>
+    Sleep at <input type="time" id="sleepTime">
+  </label>
+  <label>
+    <input type="radio" name="mode" value="wake">
+    Wake at <input type="time" id="wakeTime" disabled>
+  </label>
+
+  <label>
+    Cycles:
+    <input type="range" id="cycles" min="1" max="10" value="5">
+    <span id="cycleCount">5</span>
+  </label>
+
+  <button id="calc">Calculate</button>
+  <ul id="results"></ul>
+
+  <script>
+    const FALL=15*60e3, CYCLE=90*60e3;
+    const sleepEl = document.getElementById('sleepTime');
+    const wakeEl  = document.getElementById('wakeTime');
+    const cycles  = document.getElementById('cycles');
+    const count   = document.getElementById('cycleCount');
+    const results = document.getElementById('results');
+
+    // Toggle inputs
+    document.getElementsByName('mode').forEach(radio => {
+      radio.onchange = () => {
+        sleepEl.disabled = radio.value !== 'sleep';
+        wakeEl.disabled  = radio.value === 'sleep';
+      };
+    });
+
+    // Update cycle count
+    cycles.oninput = () => count.textContent = cycles.value;
+
+    // Calculate times
+    document.getElementById('calc').onclick = () => {
+      results.innerHTML = '';
+      const mode = document.querySelector('[name=mode]:checked').value;
+      let t = Date.parse('1970-01-01T' + (mode === 'sleep' ? sleepEl.value : wakeEl.value))
+              + (mode === 'sleep' ? FALL : 0);
+
+      for (let i = 1; i <= cycles.value; i++) {
+        const time = new Date(
+          t + (mode === 'sleep' ? i * CYCLE : -i * CYCLE - FALL)
+        ).toTimeString().slice(0,5);
+
+        results.innerHTML += `<li>${mode === 'sleep' ? 'Wake at' : 'Sleep at'} ${time} (cycle ${i})</li>`;
+      }
+    };
+  </script>
+</body>
+</html>
