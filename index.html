@@ -2,209 +2,172 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <!-- Prevent zooming + allow edge-to-edge on notched devices -->
+  <!-- lock zoom + edge-to-edge + no scroll -->
   <meta name="viewport"
-        content="width=device-width,
-                 initial-scale=1,
-                 maximum-scale=1,
-                 user-scalable=no,
-                 viewport-fit=cover">
+        content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>Cycle Calculator</title>
-
-  <!-- Safe-area padding -->
   <style>
+    /* safe-area, full height, hide overflow */
     html, body {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      margin: 0; height: 100%;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+      margin: 0; height: 100%; overflow: hidden;
     }
+    /* hide number input spinners */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0 }
+    input[type=number] { -moz-appearance: textfield }
   </style>
 
-  <!-- Favicon & PWA -->
-  <link rel="shortcut icon" href="/favicon.png" type="image/png">
-  <link rel="icon" sizes="192x192" href="/favicon-192.png" type="image/png">
-  <link rel="apple-touch-icon" href="/favicon-192.png">
+  <!-- PWA & icons -->
   <link rel="manifest" href="/manifest.json">
+  <link rel="shortcut icon" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon-192.png">
   <meta name="theme-color" content="#6366F1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Cycle Calculator">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* hide number-input spinners */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0 }
-    input[type=number] { -moz-appearance: textfield }
-  </style>
 </head>
 <body class="bg-gray-800 flex items-center justify-center h-screen">
-  <div class="bg-gray-900 p-6 w-full h-full sm:rounded-2xl sm:shadow-lg sm:max-w-md">
-    <h1 class="text-3xl font-semibold text-center mb-2 text-gray-100">Cycle Calculator</h1>
-    <p class="text-center text-gray-400 mb-6 text-sm">
+
+  <div class="bg-gray-900 p-6 w-full h-full sm:h-auto sm:max-w-md sm:rounded-2xl sm:shadow-lg flex flex-col justify-center sm:justify-start">
+    <h1 class="text-3xl font-semibold text-gray-100 text-center mb-2">Cycle Calculator</h1>
+    <p class="text-gray-400 text-sm text-center mb-6">
       Calculate your optimal bedtime or wake-up time based on sleep cycles.
     </p>
 
-    <!-- mode buttons -->
-    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
-      <button id="bedtimeBtn" class="flex-1 py-2 rounded">Bedtime</button>
-      <button id="wakeBtn"    class="flex-1 py-2 rounded">Wake-up time</button>
+    <!-- mode -->
+    <div class="flex mb-6 space-x-2">
+      <button id="sleepBtn" class="flex-1 py-2 rounded bg-gray-700 text-gray-300">Bedtime</button>
+      <button id="wakeBtn"  class="flex-1 py-2 rounded bg-indigo-600 text-white">Wake-up time</button>
     </div>
 
     <!-- time picker -->
     <div class="flex items-center justify-center space-x-3 mb-6">
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="hourInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10"
+        <input id="hourInput"
+               type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <div class="h-16 flex items-center justify-center text-3xl sm:text-4xl text-gray-400">:</div>
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="minuteInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="00"
+        <input id="minuteInput"
+               type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="00"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <div class="flex flex-col border border-gray-600 rounded-lg overflow-hidden">
-        <button id="amBtn" class="px-2 sm:px-3 py-1">AM</button>
-        <button id="pmBtn" class="px-2 sm:px-3 py-1">PM</button>
+        <button id="amBtn" class="px-3 py-1 bg-indigo-600 text-white">AM</button>
+        <button id="pmBtn" class="px-3 py-1 bg-gray-700 text-gray-300">PM</button>
       </div>
     </div>
 
     <!-- cycles -->
-    <div class="mb-2">
-      <label class="block text-gray-300 mb-1 text-sm">
-        Cycles: <span id="cycleLabel" class="font-medium text-gray-100">5</span>
-      </label>
-      <input id="cycleRange" type="range" min="1" max="10" value="5"
-             class="w-full h-2 bg-indigo-600 rounded-lg appearance-none cursor-pointer"/>
-    </div>
-    <div class="text-gray-400 italic text-xs mb-6">Recommended cycles: 4–6</div>
+    <label class="text-gray-300 text-sm mb-1">
+      Cycles: <span id="cycleLabel" class="text-gray-100">5</span>
+    </label>
+    <input id="cycleRange" type="range" min="1" max="10" value="5"
+           class="w-full h-2 bg-indigo-600 rounded-lg appearance-none cursor-pointer mb-2"/>
+    <div class="text-gray-400 italic text-xs mb-6">Recommended: 4–6</div>
 
     <!-- calculate -->
-    <button id="calculateBtn"
-            class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow
-                   hover:bg-indigo-700 transition-colors">
+    <button id="calculateBtn" class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg mb-4">
       Calculate
     </button>
 
     <!-- results -->
-    <ul id="resultList" class="mt-4 space-y-4 text-gray-100 text-sm"></ul>
+    <ul id="results" class="flex-1 overflow-auto space-y-3 text-gray-100 text-sm"></ul>
   </div>
 
-  <!-- version badge -->
+  <!-- version -->
   <div class="fixed bottom-2 left-2 text-xs text-gray-400">v1.0.0</div>
 
-  <!-- Add to Home Screen banner -->
-  <div id="a2hsBanner"
-       class="hidden fixed bottom-0 inset-x-0 bg-indigo-600 text-white p-4 flex justify-between items-center">
+  <!-- A2HS banner -->
+  <div id="a2hsBanner" class="hidden fixed bottom-0 inset-x-0 bg-indigo-600 text-white p-4 flex justify-between">
     <span>Add this app to your home screen</span>
     <div class="flex space-x-2">
-      <button id="a2hsBtn" class="bg-white text-indigo-600 px-3 py-1 rounded">Add</button>
-      <button id="a2hsClose" class="text-white text-xl leading-none">×</button>
+      <button id="a2hsBtn"   class="bg-white text-indigo-600 px-3 py-1 rounded">Add</button>
+      <button id="a2hsClose" class="text-xl leading-none">×</button>
     </div>
   </div>
 
   <script>
-    // register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(console.error);
-    }
+    // disable scroll/bounce
+    document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+    // SW registration
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
 
     // A2HS prompt
     let deferredPrompt;
-    const banner   = document.getElementById('a2hsBanner'),
-          addBtn   = document.getElementById('a2hsBtn'),
-          closeBtn = document.getElementById('a2hsClose');
-
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       deferredPrompt = e;
-      banner.classList.remove('hidden');
+      a2hsBanner.classList.remove('hidden');
     });
+    a2hsBtn.onclick   = async () => { a2hsBanner.classList.add('hidden'); deferredPrompt.prompt(); await deferredPrompt.userChoice; };
+    a2hsClose.onclick = () => a2hsBanner.classList.add('hidden');
 
-    addBtn.addEventListener('click', async () => {
-      banner.classList.add('hidden');
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-    });
-
-    closeBtn.addEventListener('click', () => {
-      banner.classList.add('hidden');
-    });
-
-    // Calculator logic
-    const CYCLE_MIN = 90 * 60000,
-          CYCLE_MAX = 120 * 60000,
-          ACTIVE    = 'bg-indigo-600 text-white',
-          INACTIVE  = 'bg-gray-700 text-gray-300';
-
-    const els = {
-      bedtimeBtn:   document.getElementById('bedtimeBtn'),
-      wakeBtn:      document.getElementById('wakeBtn'),
-      hourInput:    document.getElementById('hourInput'),
-      minuteInput:  document.getElementById('minuteInput'),
-      amBtn:        document.getElementById('amBtn'),
-      pmBtn:        document.getElementById('pmBtn'),
-      cycleRange:   document.getElementById('cycleRange'),
-      cycleLabel:   document.getElementById('cycleLabel'),
-      calculateBtn: document.getElementById('calculateBtn'),
-      resultList:   document.getElementById('resultList')
-    };
+    // UI refs
+    const sleepBtn     = document.getElementById('sleepBtn'),
+          wakeBtn      = document.getElementById('wakeBtn'),
+          hourInput    = document.getElementById('hourInput'),
+          minuteInput  = document.getElementById('minuteInput'),
+          amBtn        = document.getElementById('amBtn'),
+          pmBtn        = document.getElementById('pmBtn'),
+          cycleRange   = document.getElementById('cycleRange'),
+          cycleLabel   = document.getElementById('cycleLabel'),
+          calculateBtn = document.getElementById('calculateBtn'),
+          results      = document.getElementById('results');
 
     let mode = 'wake', period = 'AM';
-    const setToggle = (on, off) => {
-      on.className  = `flex-1 py-2 rounded ${ACTIVE}`;
-      off.className = `flex-1 py-2 rounded ${INACTIVE}`;
-    };
-    const setPeriod = (on, off) => {
-      on.className  = `px-2 sm:px-3 py-1 ${ACTIVE}`;
-      off.className = `px-2 sm:px-3 py-1 ${INACTIVE}`;
-    };
+    const ACTIVE   = ['bg-indigo-600','text-white'],
+          INACTIVE = ['bg-gray-700','text-gray-300'];
 
-    els.bedtimeBtn.onclick = () => { mode = 'sleep'; setToggle(els.bedtimeBtn, els.wakeBtn); };
-    els.wakeBtn.onclick    = () => { mode = 'wake';  setToggle(els.wakeBtn, els.bedtimeBtn); };
-    setToggle(els.wakeBtn, els.bedtimeBtn);
+    function toggle(on, off){
+      on.classList.remove(...INACTIVE); on.classList.add(...ACTIVE);
+      off.classList.remove(...ACTIVE); off.classList.add(...INACTIVE);
+    }
 
-    els.amBtn.onclick = () => { period = 'AM'; setPeriod(els.amBtn, els.pmBtn); };
-    els.pmBtn.onclick = () => { period = 'PM'; setPeriod(els.pmBtn, els.amBtn); };
-    setPeriod(els.amBtn, els.pmBtn);
+    sleepBtn.onclick = () => { mode='sleep'; toggle(sleepBtn, wakeBtn); };
+    wakeBtn.onclick  = () => { mode='wake';  toggle(wakeBtn, sleepBtn); };
 
-    els.hourInput.oninput = () => {
-      let v = Math.min(12, Math.max(1, +els.hourInput.value || 1));
-      els.hourInput.value = v;
-      if (els.hourInput.value.length > 1) els.minuteInput.focus();
-    };
-    els.minuteInput.oninput = () => {
-      let v = Math.min(59, Math.max(0, +els.minuteInput.value || 0));
-      els.minuteInput.value = String(v).padStart(2, '0');
-    };
-    els.hourInput.onfocus   = () => els.hourInput.select();
-    els.minuteInput.onfocus = () => els.minuteInput.select();
+    amBtn.onclick = () => { period='AM'; toggle(amBtn, pmBtn); };
+    pmBtn.onclick = () => { period='PM'; toggle(pmBtn, amBtn); };
 
-    els.cycleRange.oninput = () => {
-      els.cycleLabel.textContent = els.cycleRange.value;
-    };
+    // sanitize inputs
+    [hourInput, minuteInput].forEach(el => {
+      el.onfocus = () => el.select();
+      el.oninput = () => {
+        let max = el===hourInput ? 12 : 59;
+        let v = Math.min(max, Math.max(el===hourInput?1:0, +el.value || 0));
+        el.value = el===minuteInput ? String(v).padStart(2,'0') : v;
+        if (el===hourInput && el.value.length>1) minuteInput.focus();
+      };
+    });
 
-    els.calculateBtn.onclick = () => {
-      const h12   = +els.hourInput.value,
-            m     = +els.minuteInput.value,
-            h24   = (h12 % 12) + (period === 'PM' ? 12 : 0),
-            base  = new Date(1970, 0, 1, h24, m).getTime(),
-            cycles= +els.cycleRange.value,
-            sign  = mode === 'sleep' ? 1 : -1;
+    cycleRange.oninput = () => cycleLabel.textContent = cycleRange.value;
 
-      const minT = new Date(base + sign * cycles * CYCLE_MIN)
-                     .toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
-            optT = new Date((base + sign * cycles * CYCLE_MIN + base + sign * cycles * CYCLE_MAX)/2)
-                     .toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
-            label= mode === 'sleep' ? 'Wake-up time' : 'Bedtime';
+    calculateBtn.onclick = () => {
+      const h12  = +hourInput.value,
+            m    = +minuteInput.value,
+            h24  = (h12%12)+(period==='PM'?12:0),
+            base = new Date(1970,0,1,h24,m).getTime(),
+            n    = +cycleRange.value,
+            MIN  = 90*60000, MAX = 120*60000,
+            sign = mode==='sleep'?1:-1;
 
-      els.resultList.innerHTML = `
+      const fmt = ms => new Date(ms).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      const minT = fmt(base + sign*n*MIN),
+            optT = fmt((base+sign*n*MIN + base+sign*n*MAX)/2),
+            lbl  = mode==='sleep' ? 'Wake-up time' : 'Bedtime';
+
+      results.innerHTML = `
         <li class="bg-indigo-700 p-3 rounded text-center">
-          ${label}: <span class="font-medium">${minT}</span>
+          ${lbl}: <strong>${minT}</strong>
         </li>
-        <li class="text-gray-400 px-3 text-center">
-          However, based on the midpoint of 90–120 min cycles, your optimal ${label.toLowerCase()} would be
-          <span class="font-medium">${optT}</span>, which best aligns with lighter sleep phases.
+        <li class="text-gray-400 text-center px-2">
+          Optimal ${lbl.toLowerCase()}: <strong>${optT}</strong>
         </li>`;
     };
   </script>
