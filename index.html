@@ -23,7 +23,7 @@
     input[type=number] { -moz-appearance: textfield }
   </style>
 </head>
-<body class="bg-gray-800 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-800 flex items-center justify-center h-screen p-4">
   <div class="bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-md">
     <h1 class="text-3xl font-semibold text-center mb-2 text-gray-100">Cycle Calculator</h1>
     <p class="text-center text-gray-400 mb-6 text-sm">
@@ -36,20 +36,18 @@
       <button id="wakeBtn"    class="flex-1 py-2 rounded">Wake-up time</button>
     </div>
 
-    <!-- time picker: tighter, equal spacing -->
+    <!-- time picker -->
     <div class="flex items-center justify-center space-x-3 mb-6">
       <!-- hour -->
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="hourInput"
-               type="number" min="1" max="12" value="10"
+        <input id="hourInput" type="number" min="1" max="12" value="10"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <!-- colon -->
       <div class="h-16 flex items-center justify-center text-3xl sm:text-4xl text-gray-400">:</div>
       <!-- minute -->
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="minuteInput"
-               type="number" min="0" max="59" value="00"
+        <input id="minuteInput" type="number" min="0" max="59" value="00"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <!-- AM/PM -->
@@ -86,8 +84,7 @@
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
 
-    const CYCLE_MIN = 90 * 60000,
-          CYCLE_MAX = 120 * 60000,
+    const CYCLE_MIN = 90*60000, CYCLE_MAX = 120*60000,
           ACTIVE    = 'bg-indigo-600 text-white',
           INACTIVE  = 'bg-gray-700 text-gray-300';
 
@@ -114,17 +111,15 @@
       off.className = `px-2 sm:px-3 py-1 ${INACTIVE}`;
     };
 
-    // initialize
     els.bedtimeBtn.onclick = () => { mode = 'sleep'; setToggle(els.bedtimeBtn, els.wakeBtn); };
-    els.wakeBtn.onclick    = () => { mode = 'wake';  setToggle(els.wakeBtn,    els.bedtimeBtn); };
+    els.wakeBtn.onclick    = () => { mode = 'wake';  setToggle(els.wakeBtn, els.bedtimeBtn); };
     setToggle(els.wakeBtn, els.bedtimeBtn);
 
     els.amBtn.onclick = () => { period = 'AM'; setPeriod(els.amBtn, els.pmBtn); };
     els.pmBtn.onclick = () => { period = 'PM'; setPeriod(els.pmBtn, els.amBtn); };
     setPeriod(els.amBtn, els.pmBtn);
 
-    // input handlers
-    els.hourInput.oninput   = () => {
+    els.hourInput.oninput = () => {
       let v = Math.min(12, Math.max(1, +els.hourInput.value || 1));
       els.hourInput.value = v;
       if (els.hourInput.value.length > 1) els.minuteInput.focus();
@@ -136,10 +131,8 @@
     els.hourInput.onfocus   = () => els.hourInput.select();
     els.minuteInput.onfocus = () => els.minuteInput.select();
 
-    // slider label
     els.cycleRange.oninput = () => els.cycleLabel.textContent = els.cycleRange.value;
 
-    // calculate & render
     els.calculateBtn.onclick = () => {
       const h12   = +els.hourInput.value,
             m     = +els.minuteInput.value,
@@ -147,13 +140,11 @@
             base  = new Date(1970, 0, 1, h24, m).getTime(),
             cycles= +els.cycleRange.value,
             sign  = mode === 'sleep' ? 1 : -1;
-
-      const minT   = new Date(base + sign * cycles * CYCLE_MIN)
-                       .toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
-            optT   = new Date((base + sign * cycles * CYCLE_MIN + base + sign * cycles * CYCLE_MAX)/2)
-                       .toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
-            label = mode === 'sleep' ? 'Wake-up time' : 'Bedtime';
-
+      const minT = new Date(base + sign * cycles * CYCLE_MIN)
+                     .toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
+            optT = new Date((base + sign * cycles * CYCLE_MIN + base + sign * cycles * CYCLE_MAX)/2)
+                     .toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
+            label= mode === 'sleep' ? 'Wake-up time' : 'Bedtime';
       els.resultList.innerHTML = `
         <li class="bg-indigo-700 p-3 rounded text-center">
           ${label}: <span class="font-medium">${minT}</span>
