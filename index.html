@@ -2,76 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>SleepCalc</title>
-  <!-- Tailwind CDN -->
+  <title>Cycle Calculator</title>
+  <!-- Enable class-based dark mode, then load Tailwind -->
+  <script>
+    tailwindConfig = { darkMode: 'class' };
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
-    <h1 class="text-3xl font-semibold text-center mb-6">SleepCalc</h1>
+<body class="bg-gray-100 dark:bg-gray-800 flex items-center justify-center min-h-screen p-4 transition-colors">
+
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-md transition-colors">
+    <h1 class="text-3xl font-semibold text-center mb-2 dark:text-gray-100">Cycle Calculator</h1>
+    <p class="text-center text-gray-600 dark:text-gray-400 mb-6">
+      Calculate your optimal bedtime or wake-up time based on the number of sleep cycles you choose.
+    </p>
 
     <div class="space-y-4">
       <div class="flex items-center">
-        <input type="radio" name="mode" value="sleep" checked
-               class="h-5 w-5 text-indigo-600 focus:ring-indigo-500"/>
-        <label class="ml-2 flex-grow text-gray-700">
-          Sleep at
-          <input type="time" id="sleepTime"
-                 class="ml-2 mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"/>
+        <input type="radio" name="mode" value="sleep" checked class="h-5 w-5 text-indigo-600"/>
+        <label class="ml-2 flex-grow text-gray-700 dark:text-gray-300">
+          Bedtime
+          <input type="time" id="sleepTime" class="ml-2 mt-1 block w-32 rounded-md border-gray-300 dark:border-gray-700 shadow-sm transition-colors"/>
         </label>
       </div>
 
       <div class="flex items-center">
-        <input type="radio" name="mode" value="wake"
-               class="h-5 w-5 text-indigo-600 focus:ring-indigo-500"/>
-        <label class="ml-2 flex-grow text-gray-700">
-          Wake at
-          <input type="time" id="wakeTime" disabled
-                 class="ml-2 mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"/>
+        <input type="radio" name="mode" value="wake" class="h-5 w-5 text-indigo-600"/>
+        <label class="ml-2 flex-grow text-gray-700 dark:text-gray-300">
+          Wake-up time
+          <input type="time" id="wakeTime" disabled class="ml-2 mt-1 block w-32 rounded-md border-gray-300 dark:border-gray-700 shadow-sm transition-colors"/>
         </label>
       </div>
 
       <div>
-        <label class="block text-gray-700 mb-1">
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">
           Cycles: <span id="cycleCount" class="font-medium">5</span>
         </label>
         <input type="range" id="cycles" min="1" max="10" value="5"
-               class="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer"/>
+               class="w-full h-2 bg-indigo-200 dark:bg-indigo-700 rounded-lg appearance-none cursor-pointer transition-colors"/>
       </div>
 
       <button id="calc"
-              class="w-full py-2 mt-4 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition">
+              class="w-full py-2 mt-4 bg-indigo-600 dark:bg-indigo-500 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 dark:hover:bg-indigo-600 transition">
         Calculate
       </button>
 
-      <ul id="results" class="mt-4 space-y-2 text-gray-800"></ul>
+      <ul id="results" class="mt-4 space-y-2 text-gray-800 dark:text-gray-200"></ul>
     </div>
   </div>
 
+  <!-- Theme toggle -->
+  <button id="themeToggle"
+          class="fixed bottom-4 right-4 bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg transition-colors">
+    🌙
+  </button>
+
   <script>
     const CYCLE = 90 * 60e3;
-    const sleepEl = document.getElementById('sleepTime'),
-          wakeEl  = document.getElementById('wakeTime'),
-          cycles  = document.getElementById('cycles'),
-          count   = document.getElementById('cycleCount'),
-          results = document.getElementById('results'),
-          radios  = document.getElementsByName('mode');
+    const $ = id => document.getElementById(id);
+    const sleepEl = $('sleepTime'), wakeEl = $('wakeTime');
+    const cycles = $('cycles'), count = $('cycleCount'), results = $('results');
+    const toggle = $('themeToggle');
 
-    radios.forEach(r => r.onchange = () => {
-      sleepEl.disabled = r.value !== 'sleep';
-      wakeEl.disabled  = r.value === 'sleep';
+    // initialize theme icon
+    toggle.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+
+    toggle.onclick = () => {
+      document.documentElement.classList.toggle('dark');
+      toggle.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+    };
+
+    // toggle inputs
+    document.querySelectorAll('[name=mode]').forEach(r => {
+      r.onchange = () => {
+        const sleep = r.value === 'sleep';
+        sleepEl.disabled = !sleep;
+        wakeEl.disabled  = sleep;
+      };
     });
 
+    // update cycle count
     cycles.oninput = () => count.textContent = cycles.value;
 
-    document.getElementById('calc').onclick = () => {
+    // calculate result
+    $('calc').onclick = () => {
       results.innerHTML = '';
       const mode = document.querySelector('[name=mode]:checked').value;
-      const t0   = Date.parse(`1970-01-01T${document.getElementById(mode + 'Time').value}`);
-      const t    = new Date(t0 + (mode === 'sleep' ? 1 : -1) * cycles.value * CYCLE)
-                         .toTimeString().slice(0,5);
-      const label = mode === 'sleep' ? 'Wake at' : 'Sleep at';
-      results.innerHTML = `<li class="bg-indigo-50 p-3 rounded">${label} <span class="font-medium">${t}</span></li>`;
+      const [h, m] = $(mode + 'Time').value.split(':').map(Number);
+      const base = new Date(1970, 0, 1, h, m).getTime();
+      const sign = mode === 'sleep' ?  1 : -1;
+      const t = new Date(base + sign * cycles.value * CYCLE)
+                  .toTimeString().slice(0,5);
+      const label = mode === 'sleep' ? 'Wake-up time' : 'Bedtime';
+      results.innerHTML = `<li class="bg-indigo-50 dark:bg-indigo-900 p-3 rounded transition-colors">
+                             ${label} <span class="font-medium">${t}</span>
+                           </li>`;
     };
   </script>
 </body>
