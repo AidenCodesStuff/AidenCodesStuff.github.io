@@ -1,21 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-gray-800">
 <head>
   <meta charset="utf-8">
-  <!-- lock zoom + edge-to-edge + no scroll -->
+  <!-- lock zoom + edge-to-edge safe‐area -->
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>Cycle Calculator</title>
+
   <style>
-    /* safe-area, full height, hide overflow */
-    html, body {
-      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-      margin: 0; height: 100%; overflow: hidden;
-    }
-    /* hide number input spinners */
+    /* html now has the dark background behind the notch/status bar */
+    html { background-color: #1f2937; }
+
+    /* hide number‐input spinners */
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0 }
     input[type=number] { -moz-appearance: textfield }
+
+    /* safe‐area helper */
+    .safe {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
   </style>
 
   <!-- PWA & icons -->
@@ -29,31 +34,42 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-800 flex items-center justify-center h-screen">
+<body class="bg-transparent flex items-center justify-center h-screen overflow-hidden">
 
-  <div class="bg-gray-900 p-6 w-full h-full sm:h-auto sm:max-w-md sm:rounded-2xl sm:shadow-lg flex flex-col justify-center sm:justify-start">
-    <h1 class="text-3xl font-semibold text-gray-100 text-center mb-2">Cycle Calculator</h1>
+  <!--
+    .safe provides the top & bottom notch padding,
+    h-full+justify-center vertically centers on mobile,
+    sm:justify-start restores top‐aligned on larger
+  -->
+  <div class="safe bg-gray-900 p-6 w-full h-full sm:h-auto sm:max-w-md sm:rounded-2xl sm:shadow-lg
+              flex flex-col justify-center sm:justify-start">
+
+    <h1 class="text-3xl font-semibold text-gray-100 text-center mb-2">
+      Cycle Calculator
+    </h1>
     <p class="text-gray-400 text-sm text-center mb-6">
       Calculate your optimal bedtime or wake-up time based on sleep cycles.
     </p>
 
-    <!-- mode -->
+    <!-- Mode toggle -->
     <div class="flex mb-6 space-x-2">
-      <button id="sleepBtn" class="flex-1 py-2 rounded bg-gray-700 text-gray-300">Bedtime</button>
-      <button id="wakeBtn"  class="flex-1 py-2 rounded bg-indigo-600 text-white">Wake-up time</button>
+      <button id="sleepBtn" class="flex-1 py-2 rounded bg-gray-700 text-gray-300">
+        Bedtime
+      </button>
+      <button id="wakeBtn"  class="flex-1 py-2 rounded bg-indigo-600 text-white">
+        Wake-up time
+      </button>
     </div>
 
-    <!-- time picker -->
+    <!-- Time picker -->
     <div class="flex items-center justify-center space-x-3 mb-6">
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="hourInput"
-               type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10"
+        <input id="hourInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <div class="h-16 flex items-center justify-center text-3xl sm:text-4xl text-gray-400">:</div>
       <div class="flex items-center justify-center w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg">
-        <input id="minuteInput"
-               type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="00"
+        <input id="minuteInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="00"
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <div class="flex flex-col border border-gray-600 rounded-lg overflow-hidden">
@@ -62,7 +78,7 @@
       </div>
     </div>
 
-    <!-- cycles -->
+    <!-- Cycles slider -->
     <label class="text-gray-300 text-sm mb-1">
       Cycles: <span id="cycleLabel" class="text-gray-100">5</span>
     </label>
@@ -70,20 +86,22 @@
            class="w-full h-2 bg-indigo-600 rounded-lg appearance-none cursor-pointer mb-2"/>
     <div class="text-gray-400 italic text-xs mb-6">Recommended: 4–6</div>
 
-    <!-- calculate -->
-    <button id="calculateBtn" class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg mb-4">
+    <!-- Calculate button -->
+    <button id="calculateBtn"
+            class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg mb-4">
       Calculate
     </button>
 
-    <!-- results -->
+    <!-- Results -->
     <ul id="results" class="flex-1 overflow-auto space-y-3 text-gray-100 text-sm"></ul>
   </div>
 
-  <!-- version -->
+  <!-- Version -->
   <div class="fixed bottom-2 left-2 text-xs text-gray-400">v1.0.0</div>
 
   <!-- A2HS banner -->
-  <div id="a2hsBanner" class="hidden fixed bottom-0 inset-x-0 bg-indigo-600 text-white p-4 flex justify-between">
+  <div id="a2hsBanner"
+       class="hidden fixed bottom-0 inset-x-0 bg-indigo-600 text-white p-4 flex justify-between">
     <span>Add this app to your home screen</span>
     <div class="flex space-x-2">
       <button id="a2hsBtn"   class="bg-white text-indigo-600 px-3 py-1 rounded">Add</button>
@@ -92,11 +110,11 @@
   </div>
 
   <script>
-    // disable scroll/bounce
+    // prevent scrolling/bounce
     document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
-    // SW registration
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
+    // service worker
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
     // A2HS prompt
     let deferredPrompt;
@@ -124,25 +142,24 @@
     const ACTIVE   = ['bg-indigo-600','text-white'],
           INACTIVE = ['bg-gray-700','text-gray-300'];
 
-    function toggle(on, off){
-      on.classList.remove(...INACTIVE); on.classList.add(...ACTIVE);
-      off.classList.remove(...ACTIVE); off.classList.add(...INACTIVE);
+    function toggle(on, off) {
+      on .classList.remove(...INACTIVE); on .classList.add(...ACTIVE);
+      off.classList.remove(...ACTIVE);   off.classList.add(...INACTIVE);
     }
 
-    sleepBtn.onclick = () => { mode='sleep'; toggle(sleepBtn, wakeBtn); };
-    wakeBtn.onclick  = () => { mode='wake';  toggle(wakeBtn, sleepBtn); };
+    sleepBtn.onclick = () => { mode = 'sleep'; toggle(sleepBtn, wakeBtn); };
+    wakeBtn.onclick  = () => { mode = 'wake';  toggle(wakeBtn, sleepBtn); };
 
-    amBtn.onclick = () => { period='AM'; toggle(amBtn, pmBtn); };
-    pmBtn.onclick = () => { period='PM'; toggle(pmBtn, amBtn); };
+    amBtn.onclick = () => { period = 'AM'; toggle(amBtn, pmBtn); };
+    pmBtn.onclick = () => { period = 'PM'; toggle(pmBtn, amBtn); };
 
-    // sanitize inputs
     [hourInput, minuteInput].forEach(el => {
       el.onfocus = () => el.select();
       el.oninput = () => {
-        let max = el===hourInput ? 12 : 59;
-        let v = Math.min(max, Math.max(el===hourInput?1:0, +el.value || 0));
-        el.value = el===minuteInput ? String(v).padStart(2,'0') : v;
-        if (el===hourInput && el.value.length>1) minuteInput.focus();
+        let max = el === hourInput ? 12 : 59;
+        let v = Math.min(max, Math.max(el === hourInput ? 1 : 0, +el.value || 0));
+        el.value = el === minuteInput ? String(v).padStart(2, '0') : v;
+        if (el === hourInput && el.value.length > 1) minuteInput.focus();
       };
     });
 
@@ -151,16 +168,16 @@
     calculateBtn.onclick = () => {
       const h12  = +hourInput.value,
             m    = +minuteInput.value,
-            h24  = (h12%12)+(period==='PM'?12:0),
+            h24  = (h12 % 12) + (period === 'PM' ? 12 : 0),
             base = new Date(1970,0,1,h24,m).getTime(),
             n    = +cycleRange.value,
             MIN  = 90*60000, MAX = 120*60000,
-            sign = mode==='sleep'?1:-1;
+            sign = mode === 'sleep' ? 1 : -1;
 
-      const fmt = ms => new Date(ms).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-      const minT = fmt(base + sign*n*MIN),
-            optT = fmt((base+sign*n*MIN + base+sign*n*MAX)/2),
-            lbl  = mode==='sleep' ? 'Wake-up time' : 'Bedtime';
+      const fmt  = ms => new Date(ms).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
+            minT = fmt(base + sign*n*MIN),
+            optT = fmt((base + sign*n*MIN + base + sign*n*MAX) / 2),
+            lbl  = mode === 'sleep' ? 'Wake-up time' : 'Bedtime';
 
       results.innerHTML = `
         <li class="bg-indigo-700 p-3 rounded text-center">
