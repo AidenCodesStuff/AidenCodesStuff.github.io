@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset=utf-8><title>SleepCalc</title></head><body>
+<h1>SleepCalc</h1>
+<label><input type=radio name=m value=s checked>Sleep at <input type=time id=sl></label><br>
+<label><input type=radio name=m value=w>Wake at <input type=time id=wk disabled></label><br>
+<label>Cycles <input type=range id=cy min=1 max=10 value=5 oninput="nc.textContent=this.value"></label>
+<span id=nc>5</span><br>
+<button onclick="
+ m=document.querySelector('[name=m]:checked').value;
+ f=15*60e3; C=90*60e3;
+ t=Date.parse('1970-01-01T'+(m=='s'?sl.value:wk.value))+(m=='s'?f:0);
+ o.innerHTML='';
+ for(i=1;i<=cy.value;i++){
+   d=new Date(t+(m=='s'?i*C:-i*C-f));
+   o.innerHTML+='<li>'+ (m=='s'?'Wake at ':'Sleep at ')+d.toTimeString().slice(0,5)+' (cycle '+i+')</li>';
+ }
+">Calc</button>
+<ul id=o></ul>
+<script>
+for(r of document.getElementsByName('m'))
+  r.onchange=_=>{ sl.disabled=r.value!='s'; wk.disabled=r.value!='w' };
+</script>
+</body></html>
