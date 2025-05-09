@@ -20,9 +20,7 @@
 <body class="bg-gray-800 flex items-center justify-center min-h-screen p-4">
   <div class="bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-md">
     <h1 class="text-3xl font-semibold text-center mb-2 text-gray-100">Cycle Calculator</h1>
-    <p class="text-center text-gray-400 mb-6 text-sm">
-      Calculate your optimal bedtime or wake-up time based on sleep cycles.
-    </p>
+    <p class="text-center text-gray-400 mb-6 text-sm">Calculate your optimal bedtime or wake-up time based on sleep cycles.</p>
 
     <!-- mode buttons -->
     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
@@ -30,8 +28,8 @@
       <button id="wakeBtn"    class="flex-1 py-2 rounded">Wake-up time</button>
     </div>
 
-    <!-- time picker -->
-    <div class="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+    <!-- time picker: always row, wrap if needed -->
+    <div class="flex flex-wrap flex-row items-center justify-center space-x-2 space-y-2 mb-6">
       <input id="hourInput" type="number" min="1" max="12" value="10"
         class="w-12 sm:w-16 h-16 bg-gray-700 border border-gray-600 rounded-lg text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       <div class="text-3xl sm:text-4xl text-gray-400">:</div>
@@ -63,11 +61,12 @@
     <ul id="resultList" class="mt-4 space-y-4 text-gray-100 text-sm"></ul>
   </div>
 
+  <!-- version badge -->
+  <div class="fixed bottom-2 left-2 text-xs text-gray-400">v1.0.0</div>
+
   <script>
-    const CYCLE_MIN = 90 * 60000,
-          CYCLE_MAX = 120 * 60000,
-          ACTIVE    = 'bg-indigo-600 text-white',
-          INACTIVE  = 'bg-gray-700 text-gray-300';
+    const CYCLE_MIN = 90 * 60000, CYCLE_MAX = 120 * 60000,
+          ACTIVE    = 'bg-indigo-600 text-white', INACTIVE = 'bg-gray-700 text-gray-300';
 
     const els = {
       bedtimeBtn:  document.getElementById('bedtimeBtn'),
@@ -104,7 +103,7 @@
     setPeriod(els.amBtn, els.pmBtn);
 
     // Input handlers
-    els.hourInput.oninput   = () => {
+    els.hourInput.oninput = () => {
       let v = Math.min(12, Math.max(1, +els.hourInput.value || 1));
       els.hourInput.value = v;
       if (els.hourInput.value.length > 1) els.minuteInput.focus();
@@ -126,7 +125,7 @@
             h24   = (h12 % 12) + (period === 'PM' ? 12 : 0),
             base  = new Date(1970, 0, 1, h24, m).getTime(),
             cycles= +els.cycleRange.value,
-            sign  = mode === 'sleep' ?  1 : -1,
+            sign  = mode === 'sleep' ? 1 : -1,
             minMs = base + sign * cycles * CYCLE_MIN,
             maxMs = base + sign * cycles * CYCLE_MAX,
             optMs = (minMs + maxMs) / 2,
