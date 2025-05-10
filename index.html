@@ -41,10 +41,14 @@
 
     <!-- Mode Toggle -->
     <div class="flex w-full mb-6 space-x-2">
-      <button id="sleepBtn" class="flex-1 py-2 rounded bg-gray-700 text-gray-300">
+      <button id="sleepBtn"
+              class="flex-1 py-2 rounded bg-gray-700 text-gray-300
+                     transition-colors duration-150 hover:bg-gray-600 active:scale-95">
         Bedtime
       </button>
-      <button id="wakeBtn" class="flex-1 py-2 rounded bg-indigo-600 text-white">
+      <button id="wakeBtn"
+              class="flex-1 py-2 rounded bg-indigo-600 text-white
+                     transition-colors duration-150 hover:bg-indigo-700 active:scale-95">
         Wake-up
       </button>
     </div>
@@ -61,8 +65,16 @@
                class="w-full h-full bg-transparent text-3xl sm:text-4xl text-center text-gray-200 focus:outline-none"/>
       </div>
       <div class="flex flex-col border border-gray-600 rounded-lg overflow-hidden">
-        <button id="amBtn" class="px-3 py-1 bg-indigo-600 text-white">AM</button>
-        <button id="pmBtn" class="px-3 py-1 bg-gray-700 text-gray-300">PM</button>
+        <button id="amBtn"
+                class="px-3 py-1 bg-indigo-600 text-white
+                       transition-colors duration-150 hover:bg-indigo-700 active:scale-95">
+          AM
+        </button>
+        <button id="pmBtn"
+                class="px-3 py-1 bg-gray-700 text-gray-300
+                       transition-colors duration-150 hover:bg-gray-600 active:scale-95">
+          PM
+        </button>
       </div>
     </div>
 
@@ -75,10 +87,14 @@
            class="w-full h-2 bg-indigo-600 rounded-lg appearance-none cursor-pointer mb-6"/>
 
     <!-- Actions -->
-    <button id="calculateBtn" class="w-full py-2 bg-indigo-600 text-white rounded-lg mb-2">
+    <button id="calculateBtn"
+            class="w-full py-2 bg-indigo-600 text-white rounded-lg mb-2
+                   transition-colors duration-150 hover:bg-indigo-700 active:scale-95">
       Calculate
     </button>
-    <button id="createAlarmBtn" class="w-full py-2 bg-gray-700 text-white rounded-lg mb-4 hidden">
+    <button id="createAlarmBtn"
+            class="w-full py-2 bg-gray-700 text-white rounded-lg mb-4 hidden
+                   transition-colors duration-150 hover:bg-gray-600 active:scale-95">
       Create Alarm
     </button>
 
@@ -93,16 +109,24 @@
   <div id="a2hsBanner" class="hidden fixed bottom-0 inset-x-0 bg-indigo-600 text-white p-4 flex justify-between">
     <span>Add this app to your home screen</span>
     <div class="flex space-x-2">
-      <button id="a2hsBtn"   class="bg-white text-indigo-600 px-3 py-1 rounded">Add</button>
-      <button id="a2hsClose" class="text-xl leading-none">×</button>
+      <button id="a2hsBtn"
+              class="bg-white text-indigo-600 px-3 py-1 rounded
+                     transition-colors duration-150 hover:bg-gray-100 active:scale-95">
+        Add
+      </button>
+      <button id="a2hsClose"
+              class="text-xl leading-none
+                     transition-opacity duration-150 hover:opacity-75 active:scale-95">
+        ×
+      </button>
     </div>
   </div>
 
   <script>
-    // register SW
+    // Service worker
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
 
-    // prevent double-tap zoom
+    // Prevent double-tap zoom/scroll
     let lastTouch = 0;
     document.addEventListener('touchend', e => {
       const now = Date.now();
@@ -110,22 +134,20 @@
       lastTouch = now;
     }, false);
 
-    // A2HS
+    // A2HS Prompt
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault(); deferredPrompt = e;
-      document.getElementById('a2hsBanner').classList.remove('hidden');
+      a2hsBanner.classList.remove('hidden');
     });
-    document.getElementById('a2hsBtn').onclick = async () => {
-      document.getElementById('a2hsBanner').classList.add('hidden');
+    a2hsBtn.onclick   = async () => {
+      a2hsBanner.classList.add('hidden');
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
     };
-    document.getElementById('a2hsClose').onclick = () => {
-      document.getElementById('a2hsBanner').classList.add('hidden');
-    };
+    a2hsClose.onclick = () => a2hsBanner.classList.add('hidden');
 
-    // UI refs & initialization
+    // UI refs
     const sleepBtn       = document.getElementById('sleepBtn'),
           wakeBtn        = document.getElementById('wakeBtn'),
           hourInput      = document.getElementById('hourInput'),
@@ -138,6 +160,7 @@
           createAlarmBtn = document.getElementById('createAlarmBtn'),
           results        = document.getElementById('results');
 
+    // Init slider label
     cycleLabel.textContent = cycleRange.value;
     cycleRange.oninput = () => cycleLabel.textContent = cycleRange.value;
 
