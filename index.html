@@ -2,19 +2,28 @@
 <html lang="en" class="bg-gray-800">
 <head>
   <meta charset="utf-8">
+  <!-- lock zoom + edge-to-edge safe-area -->
   <meta name="viewport"
         content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>Cycle Calculator</title>
+
   <style>
-    html { background: #1f2937 }
+    /* fill notch/status bar */
+    html { background: #1f2937; }
+    /* safe-area, full height, hide scroll */
     html, body {
       padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
       margin: 0; height: 100%; overflow: hidden;
     }
+    /* prevent double-tap zoom/scroll */
+    html, body { touch-action: manipulation; }
+    /* hide number input spinners */
     input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button { -webkit-appearance: none; margin:0 }
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0 }
     input[type=number] { -moz-appearance: textfield }
   </style>
+
+  <!-- PWA & icons -->
   <link rel="manifest" href="/manifest.json">
   <link rel="shortcut icon" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon-192.png">
@@ -22,6 +31,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Cycle Calculator">
+
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-transparent flex items-center justify-center h-screen overflow-hidden">
@@ -93,9 +103,19 @@
   <script>
     // disable scroll/bounce
     document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-    // SW
+
+    // disable double-tap zoom/scroll
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) e.preventDefault();
+      lastTouchEnd = now;
+    }, false);
+
+    // service worker
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-    // A2HS
+
+    // A2HS prompt
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault(); deferredPrompt = e;
@@ -117,11 +137,11 @@
           createAlarmBtn = document.getElementById('createAlarmBtn'),
           results        = document.getElementById('results');
 
-    let mode='wake', period='AM';
+    let mode = 'wake', period = 'AM';
     const ACTIVE   = ['bg-indigo-600','text-white'],
           INACTIVE = ['bg-gray-700','text-gray-300'];
 
-    function toggle(on,off){
+    function toggle(on, off) {
       on .classList.remove(...INACTIVE); on .classList.add(...ACTIVE);
       off.classList.remove(...ACTIVE);   off.classList.add(...INACTIVE);
     }
@@ -132,6 +152,7 @@
     amBtn.onclick = () => { period='AM'; toggle(amBtn,pmBtn); };
     pmBtn.onclick = () => { period='PM'; toggle(pmBtn,amBtn); };
 
+    // sanitize inputs
     [hourInput, minuteInput].forEach(el => {
       el.onfocus = () => el.select();
       el.oninput = () => {
@@ -150,15 +171,15 @@
             h24  = (h12%12)+(period==='PM'?12:0),
             base = new Date(1970,0,1,h24,m).getTime(),
             n    = +cycleRange.value,
-            MIN  =90*60000, MAX=120*60000,
+            MIN  = 90*60000, MAX = 120*60000,
             sign = mode==='sleep'?1:-1;
 
-      const fmt  = ms=>new Date(ms).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),
-            minT = fmt(base+sign*n*MIN),
-            optT = fmt((base+sign*n*MIN+base+sign*n*MAX)/2),
+      const fmt  = ms => new Date(ms).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),
+            minT = fmt(base + sign*n*MIN),
+            optT = fmt((base + sign*n*MIN + base + sign*n*MAX)/2),
             lbl  = mode==='sleep'?'Wake-up time':'Bedtime';
 
-      results.innerHTML=`
+      results.innerHTML = `
         <li class="bg-indigo-700 p-3 rounded text-center">
           ${lbl}: <strong>${minT}</strong>
         </li>
@@ -166,32 +187,31 @@
           Optimal ${lbl.toLowerCase()}: <strong>${optT}</strong>
         </li>`;
 
-      // show & wire alarm button
       createAlarmBtn.classList.remove('hidden');
       createAlarmBtn.onclick=()=>{
         const [time,mer] = minT.split(' '),
               [hh,mm]   = time.split(':').map(Number);
-        let H=mer==='PM'&&hh<12?hh+12:mer==='AM'&&hh===12?0:hh;
-        const now=new Date(),
-              alarm=new Date(now.getFullYear(),now.getMonth(),now.getDate(),H,mm,0);
-        const pad=n=>String(n).padStart(2,'0'),
-              utc=dt=>dt.getUTCFullYear()
-                     +pad(dt.getUTCMonth()+1)
-                     +pad(dt.getUTCDate())
-                     +'T'+pad(dt.getUTCHours())
-                     +pad(dt.getUTCMinutes())
-                     +pad(dt.getUTCSeconds())
-                     +'Z';
-        const ics=[ 
-          'BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
-          `DTSTART:${utc(alarm)}`,`SUMMARY:${lbl} Alarm`,
-          'BEGIN:VALARM','TRIGGER:-PT0M','ACTION:DISPLAY',
-          `DESCRIPTION:Time for ${lbl.toLowerCase()}`,
-          'END:VALARM','END:VEVENT','END:VCALENDAR'
-        ].join('\r\n');
-        const blob=new Blob([ics],{type:'text/calendar'}),
-              url=URL.createObjectURL(blob),
-              a=document.createElement('a');
+        let H = mer==='PM'&&hh<12?hh+12:mer==='AM'&&hh===12?0:hh;
+        const now    = new Date(),
+              alarm  = new Date(now.getFullYear(),now.getMonth(),now.getDate(),H,mm,0),
+              pad    = n=>String(n).padStart(2,'0'),
+              utc    = dt => dt.getUTCFullYear()
+                        +pad(dt.getUTCMonth()+1)
+                        +pad(dt.getUTCDate())
+                        +'T'+pad(dt.getUTCHours())
+                        +pad(dt.getUTCMinutes())
+                        +pad(dt.getUTCSeconds())
+                        +'Z',
+              ics    = [
+                'BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
+                `DTSTART:${utc(alarm)}`,'SUMMARY:'+lbl+' Alarm',
+                'BEGIN:VALARM','TRIGGER:-PT0M','ACTION:DISPLAY',
+                'DESCRIPTION:Time for '+lbl.toLowerCase(),
+                'END:VALARM','END:VEVENT','END:VCALENDAR'
+              ].join('\r\n'),
+              blob   = new Blob([ics],{type:'text/calendar'}),
+              url    = URL.createObjectURL(blob),
+              a      = document.createElement('a');
         a.href=url; a.download='alarm.ics'; a.click();
         URL.revokeObjectURL(url);
       };
